@@ -1,12 +1,15 @@
+import { useEffect, useState } from 'react'
 import { Portrait, PALETTES, type Palette, type Variant } from './characters'
+import { ARTICLES, type Article } from './articles'
+import { JOBS } from './jobs'
 
 /* ---------- データ ---------- */
 
 const NAV = [
   { href: '#about', label: 'ヴィレキャリアとは' },
   { href: '#advisors', label: 'アドバイザー' },
-  { href: '#flow', label: 'サポートの流れ' },
-  { href: '#voices', label: '先輩の声' },
+  { href: '#jobs', label: '求人情報' },
+  { href: '#articles', label: 'お役立ち記事' },
   { href: '#faq', label: 'よくある質問' },
 ]
 
@@ -51,7 +54,7 @@ const ADVISORS: {
     name: '蒼井 蓮',
     kana: 'AOI REN',
     role: 'キャリアアドバイザー',
-    tags: ['IT・Web業界', 'キャリア設計'],
+    tags: ['IT・Web業界', '物流・倉庫'],
     comment: '「やりたいこと」がなくても大丈夫。一緒に見つけるのが僕の仕事です。',
   },
   {
@@ -154,9 +157,9 @@ const VOICES: {
     variant: 'ren',
     palette: VOICE_BROWN,
     name: 'だいちさん',
-    route: 'フリーター → Web制作',
+    route: 'フリーター → 物流センター',
     age: '26歳',
-    text: '職歴に空白があって書類で落ち続けていました。朱莉さんの添削で「空白期間にやっていたこと」の伝え方が変わったら、面接に呼ばれる回数が3倍に。2ヶ月で内定が出ました。',
+    text: '職歴に空白があって書類で落ち続けていました。空白期間の伝え方を変えて、資格支援ありの倉庫求人へ。入社半年でフォークリフトの資格を取り、時給も気持ちも上がりました。',
   },
   {
     variant: 'akari',
@@ -201,7 +204,7 @@ const FAQS = [
   },
 ]
 
-const TICKER = ['未経験OK', '完全無料', '相談満足度98%', '内定まで平均1.8ヶ月', 'オンライン面談OK', '服装自由', '19時以降・土日も対応']
+const TICKER = ['未経験OK', '完全無料', '倉庫・物流の求人が得意', '相談満足度98%', '内定まで平均1.8ヶ月', 'オンライン面談OK', '服装自由', '19時以降・土日も対応']
 
 /* ---------- パーツ ---------- */
 
@@ -233,28 +236,189 @@ function Wave({ fill, flip }: { fill: string; flip?: boolean }) {
   )
 }
 
-/* ---------- 画面 ---------- */
+// 段ボールのマスコット「ハコまる」
+function BoxBuddy() {
+  return (
+    <svg viewBox="0 0 150 124" aria-hidden="true">
+      {/* 上の箱 */}
+      <rect x="30" y="12" width="46" height="40" rx="6" fill="#ffc531" stroke="#33254e" strokeWidth="3" />
+      <path d="M30 24 H76" stroke="#33254e" strokeWidth="2.4" />
+      <path d="M38 34 H68 M38 42 H58" stroke="#e8a20c" strokeWidth="3" strokeLinecap="round" />
+      {/* メインの箱(顔つき) */}
+      <rect x="14" y="52" width="70" height="60" rx="7" fill="#e8b97e" stroke="#33254e" strokeWidth="3" />
+      <rect x="42" y="52" width="14" height="60" fill="#f6d7a8" stroke="#33254e" strokeWidth="2" />
+      <circle cx="32" cy="80" r="2.8" fill="#33254e" />
+      <circle cx="66" cy="80" r="2.8" fill="#33254e" />
+      <path d="M43 88 Q49 94 55 88" stroke="#33254e" strokeWidth="2.6" strokeLinecap="round" fill="none" />
+      <ellipse cx="25" cy="88" rx="5" ry="2.6" fill="#ff9ebc" opacity="0.75" />
+      <ellipse cx="73" cy="88" rx="5" ry="2.6" fill="#ff9ebc" opacity="0.75" />
+      {/* 横の箱 */}
+      <rect x="92" y="68" width="42" height="44" rx="6" fill="#8d7bfa" stroke="#33254e" strokeWidth="3" />
+      <path d="M100 84 H126 M100 94 H118" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" opacity="0.6" />
+      {/* 星 */}
+      <path
+        d="M120 26 L123 35 L132 36 L125.5 42.5 L127.5 51 L120 46.5 L112.5 51 L114.5 42.5 L108 36 L117 35 Z"
+        fill="#ffc531"
+        stroke="#e8a20c"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
 
-export default function App() {
+function Header() {
+  return (
+    <header className="header">
+      <a className="logo" href="#top">
+        <span className="logo-mark">ヴィレ</span>
+        <span className="logo-text">キャリア</span>
+      </a>
+      <nav className="nav">
+        {NAV.map((n) => (
+          <a key={n.href} href={n.href}>
+            {n.label}
+          </a>
+        ))}
+      </nav>
+      <a className="btn btn--pink btn--sm" href="#cta">
+        無料相談してみる
+      </a>
+    </header>
+  )
+}
+
+function Footer() {
+  return (
+    <footer className="footer">
+      <a className="logo logo--footer" href="#top">
+        <span className="logo-mark">ヴィレ</span>
+        <span className="logo-text">キャリア</span>
+      </a>
+      <nav className="footer-nav">
+        {NAV.map((n) => (
+          <a key={n.href} href={n.href}>
+            {n.label}
+          </a>
+        ))}
+      </nav>
+      <p className="footer-copy">運営:ヴィレヴィレ株式会社 / © 2026 Ville Ville Inc.</p>
+    </footer>
+  )
+}
+
+function ArticleCard({ a, idPrefix }: { a: Article; idPrefix: string }) {
+  return (
+    <a className="art-card" href={`#/article/${a.id}`}>
+      <div className={`art-thumb art-thumb--${a.tone}`}>
+        <span className="art-emoji" aria-hidden="true">
+          {a.emoji}
+        </span>
+        <span className="art-cat">{a.category}</span>
+      </div>
+      <div className="art-body">
+        <h3>{a.title}</h3>
+        <p className="art-meta">
+          <span className="art-author">
+            <Portrait variant={a.author} id={`${idPrefix}-${a.id}`} title="" />
+          </span>
+          <span>
+            {a.authorName}・{a.date}・約{a.readMin}分
+          </span>
+        </p>
+      </div>
+    </a>
+  )
+}
+
+/* ---------- 記事ページ ---------- */
+
+function ArticleBody({ body }: { body: string[] }) {
+  return (
+    <>
+      {body.map((par, i) =>
+        par.trimStart().startsWith('・') ? (
+          <ul key={i}>
+            {par.split('\n').map((line) => (
+              <li key={line}>{line.replace(/^・/, '')}</li>
+            ))}
+          </ul>
+        ) : (
+          <p key={i}>{par}</p>
+        ),
+      )}
+    </>
+  )
+}
+
+function ArticlePage({ article }: { article: Article }) {
+  const related = ARTICLES.filter((a) => a.id !== article.id)
   return (
     <div className="page">
-      {/* ヘッダー */}
-      <header className="header">
-        <a className="logo" href="#top">
-          <span className="logo-mark">ヴィレ</span>
-          <span className="logo-text">キャリア</span>
-        </a>
-        <nav className="nav">
-          {NAV.map((n) => (
-            <a key={n.href} href={n.href}>
-              {n.label}
+      <Header />
+      <article className="article">
+        <div className={`article-hero article-hero--${article.tone}`}>
+          <div className="article-hero-inner">
+            <a className="article-back" href="#articles">
+              ← 記事一覧へもどる
             </a>
+            <p className="article-cat">
+              <span aria-hidden="true">{article.emoji}</span> {article.category}
+            </p>
+            <h1 className="article-title">{article.title}</h1>
+            <p className="article-meta">
+              {article.date}・読了目安 約{article.readMin}分
+            </p>
+            <ul className="article-tags">
+              {article.tags.map((t) => (
+                <li key={t}>#{t}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div className="article-body">
+          <p className="article-lead">{article.lead}</p>
+          {article.sections.map((s) => (
+            <section key={s.heading}>
+              <h2>{s.heading}</h2>
+              <ArticleBody body={s.body} />
+            </section>
           ))}
-        </nav>
-        <a className="btn btn--pink btn--sm" href="#cta">
-          無料相談してみる
-        </a>
-      </header>
+          <aside className="article-author">
+            <div className="article-author-face">
+              <Portrait variant={article.author} id={`author-${article.id}`} title={`${article.authorName}のイラスト`} />
+            </div>
+            <div>
+              <p className="article-author-label">この記事を書いた人</p>
+              <p className="article-author-name">
+                {article.authorName} <span>{article.authorRole}</span>
+              </p>
+              <a className="btn btn--pink btn--sm" href="#cta">
+                この人に相談してみる →
+              </a>
+            </div>
+          </aside>
+        </div>
+        <div className="article-related">
+          <h2 className="article-related-title">あわせて読みたい</h2>
+          <div className="articles articles--related">
+            {related.map((a) => (
+              <ArticleCard key={a.id} a={a} idPrefix="rel" />
+            ))}
+          </div>
+        </div>
+      </article>
+      <Footer />
+    </div>
+  )
+}
+
+/* ---------- トップページ ---------- */
+
+function Home() {
+  return (
+    <div className="page">
+      <Header />
 
       {/* ヒーロー */}
       <section className="hero" id="top">
@@ -274,8 +438,8 @@ export default function App() {
               <a className="btn btn--pink btn--lg" href="#cta">
                 無料でキャリア相談 <span aria-hidden="true">→</span>
               </a>
-              <a className="btn btn--ghost btn--lg" href="#flow">
-                サポートの流れを見る
+              <a className="btn btn--ghost btn--lg" href="#jobs">
+                求人をのぞいてみる
               </a>
             </div>
             <ul className="hero-stats">
@@ -420,7 +584,61 @@ export default function App() {
         </ol>
       </section>
 
-      <Wave fill="#e8f8f4" flip />
+      <Wave fill="#fff1cf" flip />
+
+      {/* 求人 */}
+      <section className="section section--sun" id="jobs">
+        <div className="jobs-mascot" aria-hidden="true">
+          <BoxBuddy />
+          <span className="jobs-mascot-line">倉庫のお仕事、あるよ〜</span>
+        </div>
+        <SectionHead
+          en="JOBS"
+          ja="未経験OKのおすすめ求人"
+          sub="いま人気の倉庫・物流のお仕事から在宅ワークまで、ぜんぶ未経験スタートOK。"
+        />
+        <div className="jobs">
+          {JOBS.map((j) => (
+            <article className="job" key={j.title}>
+              <header className="job-head">
+                <span className="job-emoji" aria-hidden="true">
+                  {j.emoji}
+                </span>
+                <div>
+                  <h3>
+                    {j.title}
+                    {j.isNew && <span className="job-new">NEW</span>}
+                  </h3>
+                  <p className="job-company">{j.company}</p>
+                </div>
+              </header>
+              <dl className="job-facts">
+                <div>
+                  <dt>勤務地</dt>
+                  <dd>{j.place}</dd>
+                </div>
+                <div>
+                  <dt>給与</dt>
+                  <dd className="job-salary">{j.salary}</dd>
+                </div>
+              </dl>
+              <ul className="job-tags">
+                {j.tags.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+              <a className="btn btn--pink btn--sm job-btn" href="#cta">
+                この求人について相談する
+              </a>
+            </article>
+          ))}
+        </div>
+        <p className="jobs-note">
+          ※ 掲載しているのはほんの一部。会員限定の非公開求人は、無料相談でご紹介しています。
+        </p>
+      </section>
+
+      <Wave fill="#e8f8f4" />
 
       {/* 先輩の声 */}
       <section className="section section--teal" id="voices">
@@ -447,8 +665,24 @@ export default function App() {
 
       <Wave fill="#fff" />
 
+      {/* お役立ち記事 */}
+      <section className="section section--white" id="articles">
+        <SectionHead
+          en="MAGAZINE"
+          ja="お役立ち記事"
+          sub="業界のリアルや選考のコツを、アドバイザーがゆるっと解説。"
+        />
+        <div className="articles">
+          {ARTICLES.map((a) => (
+            <ArticleCard key={a.id} a={a} idPrefix="home" />
+          ))}
+        </div>
+      </section>
+
+      <Wave fill="#fff7ec" flip />
+
       {/* FAQ */}
-      <section className="section section--white" id="faq">
+      <section className="section section--cream" id="faq">
         <SectionHead en="FAQ" ja="よくある質問" />
         <div className="faqs">
           {FAQS.map((f) => (
@@ -492,21 +726,36 @@ export default function App() {
         </div>
       </section>
 
-      {/* フッター */}
-      <footer className="footer">
-        <a className="logo logo--footer" href="#top">
-          <span className="logo-mark">ヴィレ</span>
-          <span className="logo-text">キャリア</span>
-        </a>
-        <nav className="footer-nav">
-          {NAV.map((n) => (
-            <a key={n.href} href={n.href}>
-              {n.label}
-            </a>
-          ))}
-        </nav>
-        <p className="footer-copy">運営:ヴィレヴィレ株式会社 / © 2026 Ville Ville Inc.</p>
-      </footer>
+      <Footer />
     </div>
   )
+}
+
+/* ---------- ルーティング ---------- */
+
+export default function App() {
+  const [hash, setHash] = useState(window.location.hash)
+
+  useEffect(() => {
+    const onChange = () => setHash(window.location.hash)
+    window.addEventListener('hashchange', onChange)
+    return () => window.removeEventListener('hashchange', onChange)
+  }, [])
+
+  const article = hash.startsWith('#/article/')
+    ? ARTICLES.find((a) => a.id === hash.slice('#/article/'.length))
+    : undefined
+
+  // 記事を開いたら先頭へ / 記事から戻ったらアンカー位置へ
+  useEffect(() => {
+    if (article) {
+      window.scrollTo(0, 0)
+      return
+    }
+    if (hash && !hash.startsWith('#/')) {
+      document.getElementById(hash.slice(1))?.scrollIntoView()
+    }
+  }, [hash, article])
+
+  return article ? <ArticlePage article={article} /> : <Home />
 }
