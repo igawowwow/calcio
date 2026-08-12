@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Portrait, PALETTES, type Palette, type Variant } from './characters'
 import { ARTICLES, type Article } from './articles'
 import { JOBS } from './jobs'
+import AdminPage from './AdminPage'
+import { loadCustomArticles, mergeArticles, saveCustomArticles } from './storage'
 
 /* ---------- データ ---------- */
 
@@ -301,6 +303,7 @@ function Footer() {
             {n.label}
           </a>
         ))}
+        <a href="#/admin">✍️ 記事の編集画面</a>
       </nav>
       <p className="footer-copy">運営:ヴィレヴィレ株式会社 / © 2026 Ville Ville Inc.</p>
     </footer>
@@ -351,8 +354,8 @@ function ArticleBody({ body }: { body: string[] }) {
   )
 }
 
-function ArticlePage({ article }: { article: Article }) {
-  const related = ARTICLES.filter((a) => a.id !== article.id)
+function ArticlePage({ article, all }: { article: Article; all: Article[] }) {
+  const related = all.filter((a) => a.id !== article.id).slice(0, 2)
   return (
     <div className="page">
       <Header />
@@ -415,7 +418,7 @@ function ArticlePage({ article }: { article: Article }) {
 
 /* ---------- トップページ ---------- */
 
-function Home() {
+function Home({ articles }: { articles: Article[] }) {
   return (
     <div className="page">
       <Header />
@@ -673,7 +676,7 @@ function Home() {
           sub="業界のリアルや選考のコツを、アドバイザーがゆるっと解説。"
         />
         <div className="articles">
-          {ARTICLES.map((a) => (
+          {articles.map((a) => (
             <ArticleCard key={a.id} a={a} idPrefix="home" />
           ))}
         </div>
@@ -735,6 +738,8 @@ function Home() {
 
 export default function App() {
   const [hash, setHash] = useState(window.location.hash)
+  const [custom, setCustom] = useState<Article[]>(() => loadCustomArticles())
+  const all = useMemo(() => mergeArticles(ARTICLES, custom), [custom])
 
   useEffect(() => {
     const onChange = () => setHash(window.location.hash)
@@ -742,20 +747,47 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onChange)
   }, [])
 
+  const isAdmin = hash === '#/admin'
   const article = hash.startsWith('#/article/')
-    ? ARTICLES.find((a) => a.id === hash.slice('#/article/'.length))
+    ? all.find((a) => a.id === hash.slice('#/article/'.length))
     : undefined
 
-  // 記事を開いたら先頭へ / 記事から戻ったらアンカー位置へ
+  // 記事・編集画面を開いたら先頭へ / トップに戻ったらアンカー位置へ
   useEffect(() => {
-    if (article) {
+    if (article || isAdmin) {
       window.scrollTo(0, 0)
       return
     }
     if (hash && !hash.startsWith('#/')) {
       document.getElementById(hash.slice(1))?.scrollIntoView()
     }
-  }, [hash, article])
+  }, [hash, article, isAdmin])
 
-  return article ? <ArticlePage article={article} /> : <Home />
+  const handleSave = (a: Article) => {
+    setCustom((prev) => {
+      const next = [a, ...prev.filter((p) => p.id !== a.id)]
+      saveCustomArticles(next)
+      return next
+    })
+  }
+
+  const handleDelete = (id: string) => {
+    setCustom((prev) => {
+      const next = prev.filter((p) => p.id !== id)
+      saveCustomArticles(next)
+      return next
+    })
+  }
+
+  if (isAdmin) {
+    return (
+      <div className="page">
+        <Header />
+        <AdminPage all={all} custom={custom} onSave={handleSave} onDelete={handleDelete} />
+        <Footer />
+      </div>
+    )
+  }
+
+  return article ? <ArticlePage article={article} all={all} /> : <Home articles={all} />
 }
